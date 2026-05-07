@@ -11,17 +11,335 @@
 
 		<link rel="stylesheet" href="dist/reset.css" />
 		<link rel="stylesheet" href="dist/reveal.css" />
-		<link rel="stylesheet" href="dist/theme/black.css" />
+		<link rel="stylesheet" href="dist/theme/blood.css" />
 
 		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="dist/plugin/highlight/monokai.css" />
+		<link rel="stylesheet" href="dist/plugin/highlight/night-owl.css" />
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
+                    <!-- Titre -->
+                <section>
+                    <h1>Projet en entreprise</h1>
+                    <h3>Outil de vérification des données fiscales</h3>
+                    <p>Jordane Rubal</p>
+                </section>
+                
+                    <!--   Contexte     -->
+                <section>
+                    <section><h1>Intro</h1></section>
+                    <section>
+                        <h3>Contexte</h3>
+                        <ul>
+                            <li>Données fiscales sensibles</li>
+                            <li>Fichiers externes (ZIP)</li>
+                            <li>Besoin de fiabilité</li>
+                        </ul>
+                        
+                        <aside class="notes">
+                        
+                        </aside>
+                    </section>
+                    
+                    
+                    <section>
+                        <h3>Problématique</h3>
+                        <p>Comment garantir l’intégrité des données ?</p>
+                        
+                        <aside class="notes">
+                        
+                        </aside>
+                    </section>
+                    
+                    
+                    <section>
+                        <h3>Objectif</h3>
+                        <ul>
+                            <li>Détecter les altérations</li>
+                            <li>Vérifier l’authenticité</li>
+                            <li>Fournir un résultat clair</li>
+                        </ul>
+                        
+                        <aside class="notes">
+                        
+                        </aside>
+                    </section>
+                </section>
+               
+<!--       Solution         -->
+                <section>
+                <section>
+                    <h1>Solution</h1>
+                </section>
+                <section>
+                    <h3>Solution</h3>
+                    <p>Application web de vérification de données</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Fonctionnalités</h3>
+                    <ul>
+                        <li>Upload ZIP</li>
+                        <li>Lecture SQLite</li>
+                        <li>Vérification</li>
+                        <li>Affichage des résultats</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Interface</h3>
+                    <p>Tableau + indicateurs ✅ ❌ 🔒</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+<!--        archi        -->
+                <section>
+                <section>
+                    <h1>Architecture</h1>
+                </section>
+                <section>
+                    <h3>Pipeline global</h3>
+                    <img src="../pipeline_simplified.png" alt="ZIP → Extraction → DB → Vérification → Résultat">
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Extraction</h3>
+                    <ul>
+                        <li>Base SQLite</li>
+                        <li>Signatures</li>
+                        <li>Clé publique</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Lecture des données</h3>
+                    <ul>
+                        <li>sql.js</li>
+                        <li>Tables dynamiques</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Interaction utilisateur</h3>
+                    <ul>
+                        <li>Sélection d’une table</li>
+                        <li>Bouton "Vérifier"</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+                
+                    <!-- VERIFICATIONS  -->
+                <section>
+                <section>
+                    <h1>Vérifications</h1>
+                </section>
+                <section>
+                    <h3>Vérifications</h3>
+                    <ul>
+                        <li>Chaînage</li>
+                        <li>Cryptographie</li>
+                        <li>API</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Chaînage</h3>
+                    <ul>
+                        <li>sequence_id</li>
+                        <li>previous_signature</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>JSON canonique</h3>
+                    <ul>
+                        <li>Tri des clés</li>
+                        <li>Format stable</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Cryptographie</h3>
+                    <ul>
+                        <li>Algorithme Ed25519</li>
+                        <li>Vérification WebCrypto</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>API</h3>
+                    <ul>
+                        <li>Validation externe</li>
+                        <li>Contrôle des signatures</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section data-markdown>
+                    <textarea data-template>
+                        ### Résultat
+                        Chaînage | Crypto | API | Résultat
+                        :-------:|:------:|:---:|:-------:
+                        OK       | OK     | OK  | 🔒/✅
+                        KO       | KO     | KO  | ❌
+                    </textarea>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+                    
+                    <!--  Jeu d'essai  -->
+                <section>
+                <section>
+                    <h1>Jeu d'essai</h1>
+                </section>
+                <section>
+                    <h3>Cas valide</h3>
+                    <p>Toutes les vérifications sont OK → ✅</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Cas modifié</h3>
+                    <p>Donnée modifiée → signature invalide → ❌</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                
+                
+                <section>
+                    <h3>Analyse</h3>
+                    <p>Les vérifications sont complémentaires.</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+                    
+                    <!--  TESTS  -->
+                <section>
+                <section>
+                    <h1>Tests</h1>
+                </section>
+                <section>
+                    <h3>Tests</h3>
+                    <ul>
+                        <li>Vitest → logique</li>
+                        <li>Playwright → utilisateur</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+                    
+                    <!--  Limites  -->
+                <section>
+                <section>
+                    <h1>Conclusion</h1>
+                </section>
+                <section>
+                    <h3>Limites</h3>
+                    <ul>
+                        <li>Horodatage absent</li>
+                        <li>Compatibilité</li>
+                        <li>Performance</li>
+                    </ul>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                    
+                    
+                    <!--  CONCLUSION  -->
+                <section>
+                    <h3>Conclusion</h3>
+                    <p>Garantir la fiabilité des données</p>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+                </section>
+                
+                <section>
+                    <h2>Merci !</h2>
+                    
+                    <aside class="notes">
+                    
+                    </aside>
+                </section>
+            
+            
+            </div>
 		</div>
 
 		<script src="dist/reveal.js"></script>
@@ -34,6 +352,7 @@
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
+                slideNumber: "c/t",
 
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
