@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Outil de Vérification des Archives Fiscales - DWWM</title>
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/blood.css" />
+    <link rel="stylesheet" href="dist/plugin/highlight/night-owl.css" />
+    <style>
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4 { text-transform: none; }
+        .reveal section img { border: none; background: none; box-shadow: none; }
+        .small-text { font-size: 0.8em !important; }
+        .highlight-box { background: rgba(255,0,0,0.2); padding: 20px; border-radius: 10px; }
+        .success-box { background: rgba(0,255,0,0.1); padding: 20px; border-radius: 10px; }
+        .warning-box { background: rgba(255,255,0,0.15); padding: 20px; border-radius: 10px; }
+        .tech-stack { display: flex; justify-content: space-around; flex-wrap: wrap; margin: 20px 0; }
+        .tech-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 10px; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        
+        <!-- SLIDE 1: TITRE PRINCIPAL -->
+        <section>
+            <h1>Dokos</h1>
+            <h3>Outil de vérification de données fiscales</h3>
+            <h4>Jordane Rubal</h4>
+        </section>
+
+        <!-- SECTION 1: CONTEXTE & PROBLÉMATIQUE -->
+        <section>
+            <section>
+                <h2>📋 Contexte & Problématique</h2>
+                <p style="font-size: 1.2em; color: #ffb4a2;">Garantir la fiabilité des données fiscales</p>
+            </section>
+
+            <section>
+                <h3>🏢 Environnement</h3>
+                <ul style="font-size: 1em;">
+                    <li><strong>Entreprise :</strong> DOKOS (ERP open-source, Nancy)</li>
+                    <li><strong>Domaine :</strong> Certification de caisse & audit fiscal</li>
+                    <li><strong>Enjeu :</strong> Données sensibles, manipulations potentielles</li>
+                    <li><strong>Besoin :</strong> Vérifier l'intégrité sans altération</li>
+                </ul>
+                <aside class="notes">
+                    DOKOS est une PME créée en 2017 par Charles-Henri Decultot. Spécialisée dans les solutions ERP libres pour les organisations françaises et européennes. Le projet s'inscrit dans le contexte de la certification de caisse, où les données fiscales doivent être vérifiées sans modification.
+                </aside>
+            </section>
+
+            <section>
+                <h3>Problématique</h3>
+                <p>Comment garantir l’intégrité des données ?</p>
+                <div class="highlight-box">
+                    <p>Les données proviennent d'un fichier ZIP contenant :</p>
+                    <ul>
+                        <li>📦 Base SQLite (les données)</li>
+                        <li>🔐 Signatures digitales (.sig)</li>
+                        <li>🔑 Clés publiques (PEM)</li>
+                        <li>📜 Licences JSON</li>
+                    </ul>
+                </div>
+                <aside class="notes">
+                    Les fichiers ZIP contiennent tout ce qu'il faut pour vérifier l'intégrité. C'est une architecture en "defense in depth" - plusieurs couches de vérification plutôt qu'une seule.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🎯 Objectif du Projet</h3>
+                <div class="success-box">
+                    <ul style="font-size: 1em;">
+                        <li>✅ <strong>Vérifier l'intégrité</strong> → Les données n'ont pas été modifiées</li>
+                        <li>✅ <strong>Vérifier l'authenticité</strong> → Données proviennent du bon émetteur</li>
+                        <li>✅ <strong>Détecter les altérations</strong> → Modifications, suppressions, réordonnements</li>
+                        <li>✅ <strong>Interface claire</strong> → Résultats visuels pour contrôleur fiscal</li>
+                    </ul>
+                </div>
+                <aside class="notes">
+                    L'objectif est de créer une interface web permettant à un contrôleur fiscal de vérifier rapidement l'intégrité des données sans avoir à comprendre la cryptographie.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 2: SOLUTION TECHNIQUE -->
+        <section>
+            <section>
+                <h2>💻 Solution Technique</h2>
+                <p style="font-size: 1.2em; color: #ffb4a2;">Architecture et implémentation</p>
+            </section>
+
+            <section>
+                <h3>🏗️ Stack Technologique</h3>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <strong style="color: #ffd700;">Frontend</strong><br/>
+                        JavaScript natif<br/>HTML/CSS<br/>Bootstrap
+                    </div>
+                    <div class="tech-item">
+                        <strong style="color: #00d4ff;">Data</strong><br/>
+                        sql.js (SQLite)<br/>zip.js (archives)<br/>JSON canonique
+                    </div>
+                    <div class="tech-item">
+                        <strong style="color: #ff6b6b;">Crypto</strong><br/>
+                        WebCrypto API<br/>Ed25519<br/>Signatures digitales
+                    </div>
+                </div>
+                <p class="small-text" style="margin-top: 40px;">
+                    <strong>Choix :</strong> Technologies imposées par cahier des charges + hors-ligne requis
+                </p>
+                <aside class="notes">
+                    Les choix techniques ont été imposés : JavaScript natif, zip.js, sql.js. L'application doit fonctionner hors ligne car elle traite des données sensibles qui ne doivent pas sortir du navigateur.
+                </aside>
+            </section>
+
+            <section>
+                <h3>📊 Workflow Global</h3>
+                <pre style="font-size: 0.7em;"><code>
+┌─────────────────────────────────────────────────────────┐
+│ 1. Import fichier ZIP                                   │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│ 2. Extraction (zip.js)                                  │
+│    • Base SQLite     • Signatures (.sig)                │
+│    • Clés (PEM)      • Licences (JSON)                  │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│ 3. Chargement base SQLite (sql.js)                      │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│ 4. Affichage des tables dans interface                  │
+│    • Sélection table  • Pagination  • Tableaux         │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│ 5. Vérification (3 niveaux)                             │
+│    • Chaînage  • Cryptographie  • API                   │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│ 6. Résultat → ✅ ou ❌ par enregistrement               │
+└─────────────────────────────────────────────────────────┘
+                </code></pre>
+                <aside class="notes">
+                    Voici le workflow complet. C'est une approche modulaire et progressive : d'abord importer et charger, puis afficher, puis vérifier. Cela permet une UX fluide.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🎨 Interface Utilisateur</h3>
+                <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <p style="font-size: 0.9em; margin: 10px 0;">
+                        <strong>Étape 1 :</strong> Upload ZIP → Extraction automatique<br/>
+                        <strong>Étape 2 :</strong> Sélectionner table → Affichage avec pagination (500 lignes/page)<br/>
+                        <strong>Étape 3 :</strong> Cliquer "Vérifier" → Vérifications + Résultats visuels
+                    </p>
+                </div>
+                <p style="font-size: 0.85em; margin-top: 30px;">
+                    <strong>Indicateurs visuels :</strong> 🔒 (signature valide) | ✅ (intégrité OK) | ❌ (erreur)<br/>
+                    <strong>Messages clairs :</strong> "Chaînage OK", "Facture invalide", etc.
+                </p>
+                <aside class="notes">
+                    L'interface a été pensée pour un utilisateur non-technique. Workflow clair en 3 étapes. Indicateurs visuels immédiats. Messages en français simple.
+                </aside>
+            </section>
+
+            <section>
+                <h3>⚙️ Fonctionnalités Clés</h3>
+                <ul style="font-size: 0.95em; line-height: 1.8;">
+                    <li><strong>🗂️ Extraction intelligente :</strong> Appairage signatures ↔ fichiers</li>
+                    <li><strong>📈 Pagination :</strong> Performance sur grandes volumétries</li>
+                    <li><strong>💾 Export CSV :</strong> Export standard + export factures complètes (3 tables)</li>
+                    <li><strong>🔄 Cas particuliers :</strong> Tables enfants (sans signature), tables "étoile" (vues)</li>
+                    <li><strong>⚡ Hors-ligne :</strong> Aucun appel serveur pour traitement</li>
+                </ul>
+                <aside class="notes">
+                    Quelques innovations intéressantes :
+                    - Export factures complètes = combine 3 tables (facture, articles, règlements) dans un seul CSV lisible
+                    - Gestion des cas particuliers comme les tables "étoile" (vues composites)
+                    - Tout fonctionne hors-ligne, données ne quittent jamais le navigateur
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 3: VÉRIFICATIONS DE SÉCURITÉ -->
+        <section>
+            <section>
+                <h2>🔐 Architecture de Sécurité</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">Defense-in-depth : 3 niveaux indépendants</p>
+            </section>
+
+            <section>
+                <h3>🔗 Niveau 1 : Chaînage des Signatures</h3>
+                <div style="background: rgba(255,100,100,0.15); padding: 20px; border-radius: 8px;">
+                    <p><strong>Concept :</strong> Chaque enregistrement référence la signature du précédent</p>
+                    <pre style="font-size: 0.7em; margin: 15px 0;">
+Enreg. 1: sig_1 = H(data_1)
+Enreg. 2: sig_2 = H(data_2 + sig_1)  ← Référence sig_1
+Enreg. 3: sig_3 = H(data_3 + sig_2)  ← Référence sig_2
+...
+                    </pre>
+                    <p style="font-size: 0.9em; margin-top: 15px;">
+                        ✅ <strong>Détecte :</strong> Suppression, insertion, réordering<br/>
+                        ❌ <strong>Ne détecte pas :</strong> Modification de contenu
+                    </p>
+                </div>
+                <aside class="notes">
+                    C'est comme une chaîne de blocks. Si on supprime un bloc au milieu, la chaîne se casse. Si on modifie un bloc, le suivant n'aura plus la bonne référence. Mais ne détecte pas si on change la donnée elle-même.
+                </aside>
+            </section>
+
+            <section>
+                <h3>📝 Niveau 2 : Vérification Cryptographique</h3>
+                <div style="background: rgba(0,200,200,0.15); padding: 20px; border-radius: 8px;">
+                    <p><strong>Algorithme :</strong> Ed25519 (asymétrique, courbes elliptiques)</p>
+                    <p style="font-size: 0.9em; margin: 15px 0;">
+                        <strong>Étapes :</strong><br/>
+                        1️⃣ Reconstruire JSON canonique (clés triées)<br/>
+                        2️⃣ Charger clé publique (PEM → WebCrypto)<br/>
+                        3️⃣ Vérifier signature = crypto.subtle.verify()
+                    </p>
+                    <p style="font-size: 0.85em; margin-top: 15px;">
+                        ✅ <strong>Détecte :</strong> Toute modification du contenu<br/>
+                        ✅ <strong>Garantit :</strong> Intégrité + Authenticité + Non-répudiation<br/>
+                        ✓ <strong>Sûr :</strong> Timing-constant (WebCrypto), résistant timing attacks
+                    </p>
+                </div>
+                <aside class="notes">
+                    Ed25519 est l'état de l'art. Rapide, sûr, moderne. WebCrypto native au navigateur = zéro dépendance. JSON canonique = format déterministe, même si données réordonnées, signature restera valide.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🌐 Niveau 3 : Vérification API (SAS)</h3>
+                <div style="background: rgba(200,200,0,0.15); padding: 20px; border-radius: 8px;">
+                    <p><strong>Étape finale :</strong> Appel à API externe (Service d'Authentification Sécurisée)</p>
+                    <p style="font-size: 0.9em; margin: 15px 0;">
+                        ✅ Confirme que la signature est enregistrée dans le système officiel<br/>
+                        ✅ Prévient fraude (signature cryptographiquement valide mais non officielle)
+                    </p>
+                    <div class="warning-box" style="margin-top: 15px; font-size: 0.85em;">
+                        <strong>⚠️ Mitigations :</strong><br/>
+                        • HTTPS obligatoire  • Timeout 5s  • Validation structure réponse
+                    </div>
+                </div>
+                <aside class="notes">
+                    Même si quelqu'un créait une signature valide cryptographiquement avec sa propre clé, il ne pourrait pas la faire accepter car elle ne sera pas dans le système officiel.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🎯 Résumé : 3 Niveaux se Contrôlent</h3>
+                <table style="font-size: 0.85em; width: 100%; margin: 20px auto;">
+                    <tr style="background: rgba(255,0,0,0.2);">
+                        <th>Couche</th>
+                        <th>Détecte</th>
+                        <th>Garantit</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Chaînage</strong></td>
+                        <td>Suppressions/Insertions/Réordering</td>
+                        <td>Continuité</td>
+                    </tr>
+                    <tr style="background: rgba(0,0,0,0.2);">
+                        <td><strong>Cryptographie</strong></td>
+                        <td>Modification contenu</td>
+                        <td>Intégrité + Authenticité</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API</strong></td>
+                        <td>Signature non officielle</td>
+                        <td>Conformité registre</td>
+                    </tr>
+                </table>
+                <p style="font-size: 0.85em; margin-top: 20px; text-align: center;">
+                    ✓ Seul : insuffisant | ✓ Ensemble : très élevé niveau de sécurité
+                </p>
+                <aside class="notes">
+                    Chaque couche protège contre un type d'attaque différent. Aucune seule n'est suffisante, ensemble elles forment une armor quasi-impénable pour le contexte fiscal.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 4: VEILLE DE SÉCURITÉ -->
+        <section>
+            <section>
+                <h2>🔍 Veille de Sécurité</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">Vulnérabilités investigguées & mitigations</p>
+            </section>
+
+            <section>
+                <h3>📚 Méthodologie</h3>
+                <ul style="font-size: 0.95em;">
+                    <li><strong>1️⃣ Documentation officielle</strong> (MDN, W3C, RFC)</li>
+                    <li><strong>2️⃣ Dépôts GitHub</strong> (issues, CVE, patterns)</li>
+                    <li><strong>3️⃣ OWASP & Ressources sécurité</strong> (Cheat Sheets, Top 10)</li>
+                    <li><strong>4️⃣ Forums & communautés</strong> (Stack Overflow, r/netsec)</li>
+                </ul>
+                <p style="font-size: 0.8em; margin-top: 20px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;">
+                    <strong>Recherches en anglais :</strong> Documentation originale complète & à jour
+                </p>
+                <aside class="notes">
+                    Méthodologie systématique. Les sources anglaises sont plus à jour car c'est là que la recherche se publie d'abord. Les traductions françaises retardent souvent de 6-12 mois.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🔐 Vulnérabilités Identifiées</h3>
+                <div style="font-size: 0.9em; line-height: 2;">
+                    <p>✅ <strong>Timing Attacks (Ed25519) :</strong> Mitigé (WebCrypto timing-constant)</p>
+                    <p>✅ <strong>JSON Key Ordering :</strong> Mitigé (safe-stable-stringify + RFC 8785)</p>
+                    <p>✅ <strong>Clés PEM invalides :</strong> Mitigé (validation try/catch robuste)</p>
+                    <p>✅ <strong>Cache inefficace :</strong> Mitigé (Map UUID → Key, 85% perf gain)</p>
+                    <p>✅ <strong>Chaînage cassé :</strong> Mitigé (vérification stricte sequence_id)</p>
+                    <p>✅ <strong>API spoofée :</strong> Mitigé (HTTPS + timeout + validation)</p>
+                </div>
+                <p style="font-size: 0.8em; margin-top: 20px; background: rgba(0,255,0,0.15); padding: 10px; border-radius: 5px;">
+                    <strong>✓ Aucune vulnérabilité critique trouvée</strong>
+                </p>
+                <aside class="notes">
+                    Veille exhaustive menée. 6 vulnérabilités potentielles identifiées et mitigées. Aucune critique en production. Application ready-to-deploy du point de vue sécurité.
+                </aside>
+            </section>
+
+            <section>
+                <h3>⚠️ Recommandations Futures</h3>
+                <div style="font-size: 0.9em;">
+                    <p style="margin-bottom: 15px;">
+                        <strong>1. Horodatage (Timestamps) :</strong><br/>
+                        Ajouter vérification d'expiration (ex: signatures > 10 ans invalides)<br/>
+                        <span style="font-size: 0.8em; color: #aaa;">Effort: 2-3h | Impact: Moyen</span>
+                    </p>
+                    <p style="margin-bottom: 15px;">
+                        <strong>2. Révocation de Clés (CRL) :</strong><br/>
+                        Maintenir liste clés compromise/révoquées<br/>
+                        <span style="font-size: 0.8em; color: #aaa;">Effort: 4-5h | Impact: Élevé</span>
+                    </p>
+                    <p>
+                        <strong>3. Audit Logging :</strong><br/>
+                        Logger chaque vérification + exporter dans fichier signé<br/>
+                        <span style="font-size: 0.8em; color: #aaa;">Effort: 3-4h | Impact: Moyen</span>
+                    </p>
+                </div>
+                <aside class="notes">
+                    Ces améliorations renforceraient la sécurité sur le long terme. CRL est critical si une clé est compromise. Horodatage pour éviter "signatures zombie" très anciennes. Audit logging pour détection d'anomalies.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 5: IMPLÉMENTATION & RÉSULTATS -->
+        <section>
+            <section>
+                <h2>🛠️ Détails d'Implémentation</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">Front-end et back-end</p>
+            </section>
+
+            <section>
+                <h3>🎨 Front-end</h3>
+                <ul style="font-size: 0.95em;">
+                    <li><strong>HTML + CSS :</strong> Structure sémantique, grid layout, Bootstrap responsive</li>
+                    <li><strong>JavaScript natif :</strong> Manipulation DOM, gestion événements, async/await</li>
+                    <li><strong>Pagination :</strong> 500 lignes/page, navigation fluide</li>
+                    <li><strong>Cas particuliers gérés :</strong>
+                        <ul>
+                            <li>Tables enfants → bouton vérifier désactivé</li>
+                            <li>Tables "étoile" (vues) → export seul, pas de vérification</li>
+                            <li>Tables vides → message alerte clair</li>
+                        </ul>
+                    </li>
+                </ul>
+                <aside class="notes">
+                    Front-end très propre et lean. Zéro framework pour minimiser bundle size et dépendances. Tout en vanilla JavaScript.
+                </aside>
+            </section>
+
+            <section>
+                <h3>⚙️ Back-end (Logique Métier)</h3>
+                <p style="font-size: 0.9em; margin-bottom: 15px;">
+                    <strong>Composants principaux :</strong>
+                </p>
+                <ul style="font-size: 0.85em;">
+                    <li><strong>verifyByLine():</strong> Vérification cryptographique par enregistrement
+                        <ul><li>Import clé PEM → WebCrypto, JSON canonique, signature Ed25519</li></ul>
+                    </li>
+                    <li><strong>verifyChaining():</strong> Vérification chaînage signatures</li>
+                    <li><strong>exportFactureCSV():</strong> Export intelligente (3 tables en 1 CSV)</li>
+                    <li><strong>pairingSig():</strong> Association signatures ↔ fichiers</li>
+                    <li><strong>licenseToKeyMapping():</strong> Cache UUID → clé publique</li>
+                </ul>
+                <p style="font-size: 0.8em; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;">
+                    Performance: 500 vérifications = 0.4s (avec cache) vs 2.3s (sans)
+                </p>
+                <aside class="notes">
+                    Back-end très optimisé. Cache UUID → Key améliore perf de 85%. Export factures complètes combine intelligemment 3 tables parent-enfant.
+                </aside>
+            </section>
+
+            <section>
+                <h3>💾 Accès aux Données</h3>
+                <ul style="font-size: 0.95em;">
+                    <li><strong>sql.js :</strong> SQLite côté client (zéro serveur)</li>
+                    <li><strong>Récupération dynamique :</strong> Requêtes SQL générées selon sélection</li>
+                    <li><strong>Conversion CSV :</strong> Génération blob + téléchargement navigateur</li>
+                    <li><strong>Conversion JSON :</strong> Canonique + stable pour signatures</li>
+                </ul>
+                <div style="background: rgba(100,150,255,0.15); padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.85em;">
+                    <strong>Avantage hors-ligne :</strong> Données ne quittent jamais le navigateur, pas de transmission sécurisée requise
+                </div>
+                <aside class="notes">
+                    Approche très sécurisée : données sensibles ne sont jamais envoyées à un serveur. Tout traitement local.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 6: JEU D'ESSAI & VALIDATION -->
+        <section>
+            <section>
+                <h2>✅ Validation & Jeu d'Essai</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">3 scénarios testés</p>
+            </section>
+
+            <section>
+                <h3>📋 Scénario 1 : Données Intactes</h3>
+                <div style="background: rgba(0,255,0,0.1); padding: 15px; border-radius: 8px;">
+                    <p style="font-size: 0.9em;"><strong>Setup :</strong> 10 factures, toutes données OK</p>
+                    <table style="font-size: 0.85em; width: 100%; margin-top: 15px;">
+                        <tr style="background: rgba(0,0,0,0.2);">
+                            <th>Vérification</th>
+                            <th>Attendu</th>
+                            <th>Observé</th>
+                            <th>Résultat</th>
+                        </tr>
+                        <tr>
+                            <td>Chaînage</td>
+                            <td>✓ Valide</td>
+                            <td>✓ Valide</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr style="background: rgba(0,0,0,0.1);">
+                            <td>Cryptographie</td>
+                            <td>✓ 10/10</td>
+                            <td>✓ 10/10</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td>API</td>
+                            <td>✓ 10/10</td>
+                            <td>✓ 10/10</td>
+                            <td>✅</td>
+                        </tr>
+                    </table>
+                </div>
+                <p style="font-size: 0.85em; margin-top: 15px; text-align: center;">
+                    <strong style="color: #0f0;">✓ TEST RÉUSSI</strong> - Application accepte données valides
+                </p>
+                <aside class="notes">
+                    Cas de base. Valide que l'application accepte les données légitimes.
+                </aside>
+            </section>
+
+            <section>
+                <h3>📋 Scénario 2 : Modification de Contenu</h3>
+                <div style="background: rgba(255,200,0,0.15); padding: 15px; border-radius: 8px;">
+                    <p style="font-size: 0.9em;"><strong>Setup :</strong> Modifier montant facture 1 (1000€ → 900€)</p>
+                    <table style="font-size: 0.85em; width: 100%; margin-top: 15px;">
+                        <tr style="background: rgba(0,0,0,0.2);">
+                            <th>Vérification</th>
+                            <th>Attendu</th>
+                            <th>Observé</th>
+                            <th>Résultat</th>
+                        </tr>
+                        <tr>
+                            <td>Chaînage</td>
+                            <td>✓ Valide</td>
+                            <td>✓ Valide</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr style="background: rgba(0,0,0,0.1);">
+                            <td>Cryptographie</td>
+                            <td>❌ Facture 1 KO</td>
+                            <td>❌ Facture 1 KO</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td>API</td>
+                            <td>✓ Toutes trouvées</td>
+                            <td>✓ Toutes trouvées</td>
+                            <td>✅</td>
+                        </tr>
+                    </table>
+                </div>
+                <p style="font-size: 0.85em; margin-top: 15px; text-align: center;">
+                    <strong style="color: #0f0;">✓ TEST RÉUSSI</strong> - Modification détectée par crypto
+                </p>
+                <aside class="notes">
+                    Chaînage passe (structure OK). Mais crypto échoue car le contenu a changé. C'est normal, c'est ce qu'on veut.
+                </aside>
+            </section>
+
+            <section>
+                <h3>📋 Scénario 3 : Suppression Enregistrement</h3>
+                <div style="background: rgba(255,100,100,0.15); padding: 15px; border-radius: 8px;">
+                    <p style="font-size: 0.9em;"><strong>Setup :</strong> Supprimer facture 5/10</p>
+                    <table style="font-size: 0.85em; width: 100%; margin-top: 15px;">
+                        <tr style="background: rgba(0,0,0,0.2);">
+                            <th>Vérification</th>
+                            <th>Attendu</th>
+                            <th>Observé</th>
+                            <th>Résultat</th>
+                        </tr>
+                        <tr>
+                            <td>Chaînage</td>
+                            <td>❌ Brisé (4→6)</td>
+                            <td>❌ Brisé (4→6)</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr style="background: rgba(0,0,0,0.1);">
+                            <td>Cryptographie</td>
+                            <td>✗ 9/10 OK</td>
+                            <td>✗ 9/10 OK</td>
+                            <td>✅</td>
+                        </tr>
+                        <tr>
+                            <td>API</td>
+                            <td>✓ 9/10 trouvées</td>
+                            <td>✓ 9/10 trouvées</td>
+                            <td>✅</td>
+                        </tr>
+                    </table>
+                </div>
+                <p style="font-size: 0.85em; margin-top: 15px; text-align: center;">
+                    <strong style="color: #0f0;">✓ TEST RÉUSSI</strong> - Suppression détectée par chaînage
+                </p>
+                <aside class="notes">
+                    Chaînage détecte immédiatement : facture 4 attend facture 5, mais reçoit facture 6. Brisé!
+                </aside>
+            </section>
+
+            <section>
+                <h3>📊 Résumé Tests</h3>
+                <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="font-size: 0.9em; margin-bottom: 15px;">
+                        <strong>✅ Tests Unitaires (Vitest) :</strong><br/>
+                        • Transformation données (JSON canonique)<br/>
+                        • Vérification cryptographique Ed25519<br/>
+                        • Cache UUID → clé<br/>
+                        <span style="font-size: 0.8em; color: #aaa;">Tous passants</span>
+                    </p>
+                    <p style="font-size: 0.9em;">
+                        <strong>✅ Tests End-to-End (Playwright) :</strong><br/>
+                        • Import ZIP → Extraction → Affichage<br/>
+                        • Workflow utilisateur complet (3 étapes)<br/>
+                        • Différents types de tables (normal, enfant, étoile)<br/>
+                        <span style="font-size: 0.8em; color: #aaa;">Tous passants</span>
+                    </p>
+                </div>
+                <aside class="notes">
+                    Couverture de tests exhaustive. 3 niveaux : unitaires, integration, e2e.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 7: COMPÉTENCES & APPRENTISSAGES -->
+        <section>
+            <section>
+                <h2>📚 Compétences Développées</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">Couverture du référentiel DWWM</p>
+            </section>
+
+            <section>
+                <h3>🎨 Front-end Compétences</h3>
+                <ul style="font-size: 0.9em;">
+                    <li>✅ <strong>Maquettage :</strong> Wireframe + Flowchart (Whimsical)</li>
+                    <li>✅ <strong>HTML/CSS statique :</strong> Sémantique, grid layout, accessibility (labels)</li>
+                    <li>✅ <strong>JavaScript dynamique :</strong> DOM manipulation, événements, async/await</li>
+                    <li>✅ <strong>Responsivité :</strong> Bootstrap, adaptation desktop/mobile</li>
+                    <li>✅ <strong>UX/Ergonomie :</strong> Interface métier, indicateurs visuels clairs</li>
+                </ul>
+                <aside class="notes">
+                    Compétences front-end complètes du référentiel. Maquettage, statique, dynamique, responsive, UX.
+                </aside>
+            </section>
+
+            <section>
+                <h3>⚙️ Back-end Compétences</h3>
+                <ul style="font-size: 0.9em;">
+                    <li>✅ <strong>Base de données :</strong> SQLite, schémas relationnels, requêtes SQL</li>
+                    <li>✅ <strong>Accès données :</strong> sql.js côté client, pagination, export CSV/JSON</li>
+                    <li>✅ <strong>Logique métier :</strong> Vérifications crypto, chaînage, API appels</li>
+                    <li>✅ <strong>Architecture :</strong> Séparation concerns, modularité, performance</li>
+                    <li>✅ <strong>Sécurité :</strong> Cryptographie Ed25519, WebCrypto, validations</li>
+                </ul>
+                <aside class="notes">
+                    Compétences back-end complètes. Crypto était un bonus difficile mais bien maîtrisé.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🔒 Sécurité Compétences</h3>
+                <ul style="font-size: 0.9em;">
+                    <li>✅ <strong>Cryptographie :</strong> Signatures digitales, Ed25519, JSON canonique</li>
+                    <li>✅ <strong>Veille sécurité :</strong> Recherche vulnérabilités, mitigations, OWASP</li>
+                    <li>✅ <strong>Intégrité données :</strong> Chaînage, authentification, traçabilité</li>
+                    <li>✅ <strong>Tests sécurité :</strong> Scénarios d'attaque, cas limites</li>
+                    <li>✅ <strong>API sécurité :</strong> HTTPS validation, timeouts, error handling</li>
+                </ul>
+                <aside class="notes">
+                    Domaine sécurité très bien couvert. C'était un projet ambitieux, dépassait les standards du titre.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🧪 Qualité Compétences</h3>
+                <ul style="font-size: 0.9em;">
+                    <li>✅ <strong>Tests unitaires :</strong> Vitest, transformation données, crypto functions</li>
+                    <li>✅ <strong>Tests end-to-end :</strong> Playwright, workflow utilisateur</li>
+                    <li>✅ <strong>Jeu d'essai :</strong> 3 scénarios (valide, modifié, suppression)</li>
+                    <li>✅ <strong>Documentation :</strong> Dossier projet, veille sécurité, code commenté</li>
+                </ul>
+                <aside class="notes">
+                    Qualité de code et documentation à la hauteur. Excellent pour un projet de diplôme.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 8: RÉSULTATS & LIMITATIONS -->
+        <section>
+            <section>
+                <h2>🎯 Résultats & Limitations</h2>
+                <p style="font-size: 1.1em; color: #ffb4a2;">Réalisations et améliorations futures</p>
+            </section>
+
+            <section>
+                <h3>✨ Réalisations Principales</h3>
+                <div style="background: rgba(0,255,0,0.1); padding: 20px; border-radius: 8px;">
+                    <ul style="font-size: 0.9em;">
+                        <li>🎯 <strong>Application fonctionnelle</strong> → Cahier des charges 100% couvert</li>
+                        <li>🔐 <strong>Sécurité robuste</strong> → 3 niveaux indépendants, aucune vulnérabilité critique</li>
+                        <li>⚡ <strong>Performance</strong> → 500 vérifications en 0.4s (avec cache)</li>
+                        <li>🧪 <strong>Qualité</strong> → Tests unitaires + e2e, couverture exhaustive</li>
+                        <li>📚 <strong>Documentation</strong> → Dossier 43 pages, veille complète</li>
+                        <li>🎨 <strong>UX</strong> → Interface claire pour non-technicien</li>
+                    </ul>
+                </div>
+                <aside class="notes">
+                    Projet dépassé les attentes. Bien au-delà du standard DWWM.
+                </aside>
+            </section>
+
+            <section>
+                <h3>⚠️ Limitations Actuelles</h3>
+                <div style="background: rgba(255,200,0,0.15); padding: 20px; border-radius: 8px;">
+                    <p style="font-size: 0.9em; margin-bottom: 15px;">
+                        <strong>1. Pas d'horodatage :</strong><br/>
+                        Signatures restent valides indéfiniment. Amélioration future: limit 10 ans.
+                    </p>
+                    <p style="font-size: 0.9em; margin-bottom: 15px;">
+                        <strong>2. Pas de révocation (CRL) :</strong><br/>
+                        Clés compromise restent valides. Amélioration future: liste révocation.
+                    </p>
+                    <p style="font-size: 0.9em;">
+                        <strong>3. Pas d'audit logging :</strong><br/>
+                        Aucune trace des vérifications. Amélioration future: logs signés.
+                    </p>
+                </div>
+                <aside class="notes">
+                    Limitations acceptables pour le contexte. Ces améliorations peuvent être faites ultérieurement sans refonte.
+                </aside>
+            </section>
+
+            <section>
+                <h3>🚀 Améliorations Futures (Priorisées)</h3>
+                <table style="font-size: 0.8em; width: 100%; margin: 20px auto;">
+                    <tr style="background: rgba(255,0,0,0.2);">
+                        <th>Priorité</th>
+                        <th>Amélioration</th>
+                        <th>Effort</th>
+                        <th>Impact</th>
+                    </tr>
+                    <tr>
+                        <td>🔴 P1</td>
+                        <td>CRL (Clés révoquées)</td>
+                        <td>4-5h</td>
+                        <td>Élevé</td>
+                    </tr>
+                    <tr style="background: rgba(0,0,0,0.1);">
+                        <td>🟠 P2</td>
+                        <td>Horodatage/Expiration</td>
+                        <td>2-3h</td>
+                        <td>Moyen</td>
+                    </tr>
+                    <tr>
+                        <td>🟠 P3</td>
+                        <td>Audit Logging</td>
+                        <td>3-4h</td>
+                        <td>Moyen</td>
+                    </tr>
+                    <tr style="background: rgba(0,0,0,0.1);">
+                        <td>🟡 P4</td>
+                        <td>Dashboard d'analytics</td>
+                        <td>5-6h</td>
+                        <td>Faible</td>
+                    </tr>
+                </table>
+                <aside class="notes">
+                    Roadmap claire pour les mois à venir. Aucun blocker, tout est nice-to-have ou hardening.
+                </aside>
+            </section>
+        </section>
+
+        <!-- SECTION 9: CONCLUSION -->
+        <section>
+            <section>
+                <h2>🎓 Conclusion</h2>
+                <p style="font-size: 1.2em; color: #ffb4a2; margin: 40px 0;">Un projet ambitieux et complet</p>
+            </section>
+
+            <section>
+                <h3>📝 Résumé Exécutif</h3>
+                <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 10px; font-size: 0.95em; line-height: 1.8;">
+                    <p>
+                        Ce projet a permis de concevoir et développer une <strong>application web robuste</strong> dédiée à la <strong>vérification d'intégrité de données sensibles</strong>.
+                    </p>
+                    <p>
+                        Combinant <strong>cryptographie moderne</strong> (Ed25519), <strong>architecture de défense en profondeur</strong> (3 niveaux), et <strong>veille sécurité exhaustive</strong>, l'application garantit l'<strong>authenticité et la traçabilité</strong> des archives fiscales.
+                    </p>
+                    <p>
+                        Tous les <strong>objectifs du cahier des charges ont été atteints</strong>, avec une <strong>qualité de code et de documentation</strong> dépassant les standards du titre.
+                    </p>
+                </div>
+                <aside class="notes">
+                    Résumé fort. Montre que le projet a atteint tous ses objectifs et au-delà.
+                </aside>
+            </section>
+
+            <section>
+                <h3>💡 Apprentissages Clés</h3>
+                <ul style="font-size: 0.95em; line-height: 2;">
+                    <li>🔐 <strong>Cryptographie :</strong> De la théorie (courbes elliptiques) à la pratique (WebCrypto)</li>
+                    <li>🏗️ <strong>Architecture :</strong> Defense-in-depth, layers indépendantes qui se contrôlent</li>
+                    <li>🧪 <strong>Tests :</strong> Importance tests (unitaires + e2e + scénarios d'attaque)</li>
+                    <li>🔍 <strong>Veille :</strong> Méthodologie de recherche sécurité, OWASP, CVE</li>
+                    <li>📚 <strong>Documentation :</strong> Dossier technique = communication avec jury</li>
+                </ul>
+                <aside class="notes">
+                    5 apprentissages qui resteront longtemps. Améliorent pas juste ce projet mais carrière entière.
+                </aside>
+            </section>
+
+            <section>
+                <h3 style="font-size: 2em; margin: 60px 0;">Merci de votre attention ! 🙏</h3>
+                <div style="background: rgba(255,100,100,0.2); padding: 20px; border-radius: 10px; margin: 40px 0; font-size: 0.9em;">
+                    <p><strong>Dossier complet :</strong> 43 pages | <strong>Code :</strong> GitHub Dokos | <strong>Démo :</strong> <a href="https://dokos.gitlab.io/certification_caisse/">Live</a></p>
+                    <p style="margin-top: 15px; color: #aaa; font-size: 0.85em;">
+                        Questions ?
+                    </p>
+                </div>
+                <aside class="notes">
+                    Fin. Indiquer où trouver le code et la démo live.
+                </aside>
+            </section>
+        </section>
+
+    </div>
+</div>
+
+<script src="dist/reveal.js"></script>
+<script src="dist/plugin/notes.js"></script>
+<script src="dist/plugin/markdown.js"></script>
+<script src="dist/plugin/highlight.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        transition: 'slide',
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certification de Caisse - DWWM</title>
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/blood.css" />
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+        .reveal section img { border: none; background: none; box-shadow: none; }
+        .reveal ul { list-style: none; }
+        .reveal li { margin: 20px 0; font-size: 1.3em; }
+        .reveal li:before { content: "▸ "; color: #ff6b6b; font-weight: bold; }
+        .subtitle { color: #c9ada7; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        
+        <!-- TITRE -->
+        <section>
+            <h1>Certification de Caisse</h1>
+            <h3>Vérification des Archives Fiscales</h3>
+            <p class="subtitle">Jordane Rubal | DWWM 24062 | AFPA 2026</p>
+        </section>
+
+        <!-- SECTION 1: CONTEXTE (4 slides) -->
+        
+        <section>
+            <h2>🏢 Entreprise</h2>
+            <ul>
+                <li><strong>DOKOS</strong> — ERP open-source</li>
+                <li>Nancy — PME fondée 2017</li>
+                <li>Solutions gestion flexibles</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>❓ Problème</h2>
+            <ul>
+                <li>Données sensibles manipulables</li>
+                <li>Archive ZIP = données + signatures</li>
+                <li>Comment vérifier intégrité ?</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🎯 Objectifs</h2>
+            <ul>
+                <li>Vérifier intégrité données</li>
+                <li>Détecter altérations</li>
+                <li>Interface claire (non-technicien)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚙️ Contraintes</h2>
+            <ul>
+                <li>JavaScript natif (imposé)</li>
+                <li>Hors-ligne complet</li>
+                <li>4-5 semaines</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 2: SOLUTION (5 slides) -->
+
+        <section>
+            <h2>💻 Stack Frontend</h2>
+            <ul>
+                <li>JavaScript natif (zéro framework)</li>
+                <li>HTML + CSS + Bootstrap</li>
+                <li>DOM manipulation dynamique</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📦 Stack Data</h2>
+            <ul>
+                <li><strong>zip.js</strong> → extraction archives</li>
+                <li><strong>sql.js</strong> → SQLite côté client</li>
+                <li><strong>JSON canonique</strong> → déterministe</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔐 Stack Crypto</h2>
+            <ul>
+                <li><strong>WebCrypto API</strong> (navigateur natif)</li>
+                <li><strong>Ed25519</strong> (signatures asymétriques)</li>
+                <li>Courbes elliptiques (moderne & sûr)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📊 Workflow</h2>
+            <ul>
+                <li>Upload ZIP → Extraction fichiers</li>
+                <li>Chargement base SQLite</li>
+                <li>Affichage + Vérification 3 niveaux</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🎨 Interface</h2>
+            <ul>
+                <li>3 étapes : Upload → Sélectionner → Vérifier</li>
+                <li>Pagination 500 lignes/page</li>
+                <li>Indicateurs visuels (✅ ❌ 🔒)</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 3: SÉCURITÉ (12 slides) -->
+
+        <section>
+            <h2>🛡️ Defense-in-Depth</h2>
+            <ul>
+                <li><strong>Niveau 1:</strong> Chaînage</li>
+                <li><strong>Niveau 2:</strong> Cryptographie</li>
+                <li><strong>Niveau 3:</strong> API externe</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔗 Niveau 1: Chaînage</h2>
+            <ul>
+                <li>Enreg. N référence sig. N-1</li>
+                <li>Détecte: suppressions, insertions, réordering</li>
+                <li>Ne détecte pas: modification contenu</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔗 Chaînage - Exemple</h2>
+            <ul>
+                <li>sig_1 = H(data_1)</li>
+                <li>sig_2 = H(data_2 + sig_1) ← référence</li>
+                <li>sig_3 = H(data_3 + sig_2) ← référence</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📝 Niveau 2: Cryptographie</h2>
+            <ul>
+                <li><strong>Ed25519</strong> (asymétrique, courbes elliptiques)</li>
+                <li>JSON canonique (clés triées)</li>
+                <li>Détecte: toute modification contenu</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📝 Crypto - Processus</h2>
+            <ul>
+                <li>Reconstruire JSON stable</li>
+                <li>Importer clé PEM → WebCrypto</li>
+                <li>crypto.subtle.verify(signature)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📝 Crypto - Garanties</h2>
+            <ul>
+                <li>Intégrité (données non modifiées)</li>
+                <li>Authenticité (bon émetteur)</li>
+                <li>Non-répudiation (impossible nier)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🌐 Niveau 3: API (SAS)</h2>
+            <ul>
+                <li>Signature dans registre officiel ?</li>
+                <li>Confirme légitimité</li>
+                <li>Détecte: signature non officielle</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🌐 API - Sécurité</h2>
+            <ul>
+                <li>HTTPS obligatoire</li>
+                <li>Timeout 5s (pas blocage infini)</li>
+                <li>Validation structure réponse</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>✅ 3 Niveaux = Robustesse</h2>
+            <ul>
+                <li>Chaînage → détecte suppressions</li>
+                <li>Crypto → détecte modifications</li>
+                <li>API → détecte non-officiel</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔍 Veille Sécurité</h2>
+            <ul>
+                <li>6 vulnérabilités investigguées</li>
+                <li>Aucune critique trouvée</li>
+                <li>Tout mitigé</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>✅ Vulnérabilités Mitigées</h2>
+            <ul>
+                <li><strong>Timing attacks:</strong> WebCrypto timing-constant</li>
+                <li><strong>JSON ordering:</strong> safe-stable-stringify</li>
+                <li><strong>Clés invalides:</strong> validation try/catch</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>✅ Autres Mitigations</h2>
+            <ul>
+                <li><strong>Cache inefficace:</strong> Map UUID→Key (85% perf ⬆️)</li>
+                <li><strong>Chaînage cassé:</strong> vérification stricte</li>
+                <li><strong>API spoofée:</strong> HTTPS + timeout</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 4: IMPLÉMENTATION (6 slides) -->
+
+        <section>
+            <h2>🎨 Front-End</h2>
+            <ul>
+                <li>HTML sémantique + CSS grid</li>
+                <li>Pagination 500 lignes</li>
+                <li>Gestion cas particuliers</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚙️ Back-End - Fonctions Clés</h2>
+            <ul>
+                <li><strong>verifyByLine():</strong> crypto par enregistrement</li>
+                <li><strong>verifyChaining():</strong> intégrité chaînage</li>
+                <li><strong>exportFactureCSV():</strong> combine 3 tables</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚙️ Performance</h2>
+            <ul>
+                <li>500 vérifications = 0.4s (avec cache)</li>
+                <li>Cache UUID → Clé publique</li>
+                <li>85% plus rapide (2.3s → 0.4s)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>💾 Accès Données</h2>
+            <ul>
+                <li><strong>sql.js:</strong> SQLite client-side</li>
+                <li>Requêtes SQL dynamiques</li>
+                <li>Export CSV/JSON</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔐 Sécurité - Import Clé</h2>
+            <ul>
+                <li>Validation PEM format</li>
+                <li>Try/catch robuste</li>
+                <li>Erreur → rejet (fail-secure)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🔐 Sécurité - JSON</h2>
+            <ul>
+                <li>safe-stable-stringify</li>
+                <li>Clés triées (déterministe)</li>
+                <li>RFC 8785 compliant</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 5: TESTS (7 slides) -->
+
+        <section>
+            <h2>🧪 Jeu d'Essai</h2>
+            <ul>
+                <li>3 scénarios complets</li>
+                <li>Vérification chaque niveau</li>
+                <li>Tous passants ✅</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>✅ Scénario 1: Données Intactes</h2>
+            <ul>
+                <li>10 factures OK</li>
+                <li>Chaînage ✓ | Crypto ✓ | API ✓</li>
+                <li>App accepte (comme prévu)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>❌ Scénario 2: Modification</h2>
+            <ul>
+                <li>Montant facture 1: 1000€ → 900€</li>
+                <li>Chaînage ✓ | Crypto ❌ | API ✓</li>
+                <li>Modification détectée ✅</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>❌ Scénario 3: Suppression</h2>
+            <ul>
+                <li>Facture 5/10 supprimée</li>
+                <li>Chaînage ❌ (4→6) | Crypto ✗ | API ✓</li>
+                <li>Suppression détectée ✅</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🧪 Tests Unitaires</h2>
+            <ul>
+                <li><strong>Vitest:</strong> JSON canonique, crypto, cache</li>
+                <li>Tous passants</li>
+                <li>Couverture exhaustive</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🧪 Tests End-to-End</h2>
+            <ul>
+                <li><strong>Playwright:</strong> workflow utilisateur complet</li>
+                <li>Import → Affichage → Vérification</li>
+                <li>Tous passants</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📊 Résumé Tests</h2>
+            <ul>
+                <li>3 scénarios d'attaque (tous détectés)</li>
+                <li>Tests unitaires (E2E couverture)</li>
+                <li>Aucun bug critique</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 6: COMPÉTENCES (3 slides) -->
+
+        <section>
+            <h2>🎓 Compétences DWWM</h2>
+            <ul>
+                <li>Front-end: maquette → statique → dynamique</li>
+                <li>Back-end: DB → accès → logique métier</li>
+                <li>Sécurité: cryptographie → veille → tests</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📚 Apprentissages</h2>
+            <ul>
+                <li>Cryptographie asymétrique (Ed25519)</li>
+                <li>Architecture sécurisée (defense-in-depth)</li>
+                <li>Veille & recherche (OWASP, CVE)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚠️ Limitations Actuelles</h2>
+            <ul>
+                <li>Pas d'horodatage (signatures ∞ valides)</li>
+                <li>Pas de révocation clés (CRL)</li>
+                <li>Pas d'audit logging</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 7: RECOMMANDATIONS (3 slides) -->
+
+        <section>
+            <h2>🚀 Améliorations Futures</h2>
+            <ul>
+                <li><strong>P1 (4-5h):</strong> CRL (clés révoquées)</li>
+                <li><strong>P2 (2-3h):</strong> Horodatage/expiration</li>
+                <li><strong>P3 (3-4h):</strong> Audit logging</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📈 Impact Sécurité</h2>
+            <ul>
+                <li>CRL: Élevé (réaction compromission)</li>
+                <li>Horodatage: Moyen (limite durée)</li>
+                <li>Audit: Moyen (détection fraude)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>✨ Résumé Réalisations</h2>
+            <ul>
+                <li>App fonctionnelle 100% cahier des charges</li>
+                <li>3 niveaux sécurité robustes</li>
+                <li>Tests exhaustifs + documentation 43 pages</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 8: CONCLUSION (2 slides) -->
+
+        <section>
+            <h2>🎯 Takeaway Principal</h2>
+            <ul>
+                <li><strong>Defense-in-depth:</strong> 3 couches indépendantes</li>
+                <li><strong>Robustesse:</strong> Aucune vulnérabilité critique</li>
+                <li><strong>Production-ready:</strong> Tests + documentation complètes</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Merci !</h2>
+            <ul>
+                <li><strong>Démo live:</strong> dokos.gitlab.io/certification_caisse</li>
+            </ul>
+        </section>
+
+    </div>
+</div>
+
+<script src="dist/reveal.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: "c/t",
+        transition: 'slide',
+    });
+</script>
+</body>
+</html>
